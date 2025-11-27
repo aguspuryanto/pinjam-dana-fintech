@@ -1,11 +1,36 @@
-import { Button } from '@/components/ui/button';
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import DashboardLayout from './components/layout/DashboardLayout'
+import DashboardPage from './pages/dashboard/DashboardPage'
+import ProfilePage from './pages/profile/ProfilePage'
+import LoginPage from './pages/auth/LoginPage'
 
-export default function App() {
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') || sessionStorage.getItem('isAuthenticated')
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
+}
+
+function App() {
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100">
-      <h1 className="text-3xl font-bold text-blue-600">Vite + React + Tailwind + TypeScript</h1>
-
-      {/* <Button>Click Me</Button> */}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+      </Routes>
+    </Router>
   )
 }
+
+export default App
