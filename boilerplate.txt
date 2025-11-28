@@ -1,0 +1,212 @@
+// Boilerplate PWA + Vite + React + Shadcn UI + Tailwind
+// Struktur minimal untuk Role Borrower PinjamDana
+
+// File: main.tsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./src/App";
+import "./src/index.css";
+import { BrowserRouter } from "react-router-dom";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
+
+// File: src/App.tsx
+import { Routes, Route } from "react-router-dom";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Dashboard from "./pages/dashboard/Dashboard";
+import KYC from "./pages/kyc/KYC";
+import ApplyLoan from "./pages/loan/ApplyLoan";
+import Payment from "./pages/payment/Payment";
+import BankAccount from "./pages/bank/BankAccount";
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/kyc" element={<KYC />} />
+      <Route path="/loan/apply" element={<ApplyLoan />} />
+      <Route path="/payment" element={<Payment />} />
+      <Route path="/bank" element={<BankAccount />} />
+    </Routes>
+  );
+}
+
+// File: src/components/ui/Button.tsx (shadcn button)
+import { Button } from "@/components/ui/button";
+export default Button;
+
+// File: src/pages/auth/Login.tsx
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  return (
+    <div className="p-6 max-w-md mx-auto space-y-4">
+      <h1 className="text-xl font-bold">Login</h1>
+      <Input placeholder="Email / No HP" onChange={(e) => setEmail(e.target.value)} />
+      <Input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+      <Button className="w-full">Masuk</Button>
+    </div>
+  );
+}
+
+// File: src/pages/auth/Register.tsx
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function Register() {
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+
+  return (
+    <div className="p-6 max-w-md mx-auto space-y-4">
+      <h1 className="text-xl font-bold">Registrasi</h1>
+      <Input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+      <Input placeholder="No HP" onChange={(e) => setPhone(e.target.value)} />
+      <Input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+      <Button className="w-full">Daftar</Button>
+    </div>
+  );
+}
+
+// File: src/pages/dashboard/Dashboard.tsx
+import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+
+export default function Dashboard() {
+  return (
+    <div className="p-6 space-y-4">
+      <h1 className="text-xl font-bold">Dashboard</h1>
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <p>Status KYC: Pending</p>
+          <Link to="/kyc" className="text-blue-500 underline">Lengkapi KYC</Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <p>Limit Pinjaman: Rp 500.000</p>
+          <Link to="/loan/apply" className="text-blue-500 underline">Ajukan Pinjaman</Link>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// File: src/pages/kyc/KYC.tsx
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+export default function KYC() {
+  return (
+    <div className="p-6 space-y-4">
+      <h1 className="text-xl font-bold">Verifikasi KYC</h1>
+      <p>Upload KTP Depan</p>
+      <Input type="file" />
+      <p>Upload KTP Belakang</p>
+      <Input type="file" />
+      <p>Selfie</p>
+      <Input type="file" />
+      <Button className="w-full">Submit KYC</Button>
+    </div>
+  );
+}
+
+// File: src/pages/loan/ApplyLoan.tsx
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function ApplyLoan() {
+  const [amount, setAmount] = useState(500000);
+
+  return (
+    <div className="p-6 space-y-4">
+      <h1 className="text-xl font-bold">Ajukan Pinjaman</h1>
+      <Input type="number" value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+      <p>Tenor:</p>
+      <select className="border p-2 rounded w-full">
+        <option>1 Bulan</option>
+        <option>2 Bulan</option>
+        <option>3 Bulan</option>
+        <option>6 Bulan</option>
+      </select>
+
+      <p>Upload Dokumen Tambahan</p>
+      <Input type="file" />
+
+      <p>Info Jaminan (offline)</p>
+      <Input placeholder="Jenis Barang" />
+      <Input placeholder="Nilai Perkiraan" />
+
+      <Button className="w-full">Kirim Pengajuan</Button>
+    </div>
+  );
+}
+
+// File: src/pages/bank/BankAccount.tsx
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function BankAccount() {
+  return (
+    <div className="p-6 space-y-4 max-w-md mx-auto">
+      <h1 className="text-xl font-bold">Rekening Pencairan</h1>
+      <Input placeholder="Nama Bank" />
+      <Input placeholder="Nomor Rekening" />
+      <Button className="w-full">Simpan</Button>
+    </div>
+  );
+}
+
+// File: src/pages/payment/Payment.tsx
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function Payment() {
+  return (
+    <div className="p-6 space-y-4 max-w-md mx-auto">
+      <h1 className="text-xl font-bold">Pembayaran Pinjaman</h1>
+      <p>Upload Bukti Transfer</p>
+      <Input type="file" />
+      <Button className="w-full">Submit Pembayaran</Button>
+    </div>
+  );
+}
+
+// File: vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.svg", "favicon.ico", "robots.txt"],
+      manifest: {
+        name: "PinjamDana PWA",
+        short_name: "PinjamDana",
+        start_url: "/",
+        display: "standalone",
+        background_color: "#ffffff",
+        theme_color: "#0ea5e9",
+        icons: []
+      }
+    })
+  ]
+});
