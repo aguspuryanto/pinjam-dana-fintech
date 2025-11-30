@@ -1,0 +1,32 @@
+{
+  "members": [
+    {
+      "name": "Agus Puryanto",
+      "email": "aguspuryanto@gmail.com",
+      "phone": "082244492100",
+      "password": "asdf1234",
+      "id": "1764316496483",
+      "createdAt": "2025-11-28T07:54:56.483Z",
+      "updatedAt": "2025-11-30T03:12:36.590Z",
+      "status": "active",
+      "verifikasi_kyc": [
+        {
+          "nik": "1234567890123456",
+          "name": "Agus Puryanto",
+          "address": "GBR B8 Menganti, Gresik",
+          "phone": "082244492100",
+          "ktpFile": {},
+          "selfieFile": {},
+          "submittedAt": "2025-11-30T08:34:45.270Z",
+          "status": "pending"
+        }
+      ],
+      "pinjaman_limit": {
+        "maximum": 500000
+      },
+      "pinjaman_aktif": [],
+      "pinjaman_riwayat": [],
+      "role": "Member"
+    }
+  ]
+}

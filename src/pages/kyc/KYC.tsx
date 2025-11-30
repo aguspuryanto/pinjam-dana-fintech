@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Upload, Clock } from "lucide-react";
+import { useLocalStorage } from '@/useLocalStorage'
+import { Member } from '@/types/member'
 
 export default function KYC() {
   const [formData, setFormData] = useState({
@@ -12,13 +14,62 @@ export default function KYC() {
     name: "",
     address: "",
     phone: "",
-    ktpFile: null as File | null,
-    selfieFile: null as File | null,
+    ktpFile: "",
+    selfieFile: "",
+    submittedAt: "",
+    status: ""
   });
+  
+  const [userEmail] = useLocalStorage('userEmail', '')
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [user, setUser] = useState<Member | null>(null)
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/members')
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data')
+        }
+        const members = await response.json()
+        const foundUser = members.find((member: Member) => member.email === userEmail)
+        
+        if (foundUser) {
+          const userData: Member = {
+            ...foundUser,
+            role: foundUser.role || 'Member',
+            status: foundUser.status || 'active',
+            createdAt: foundUser.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+          setUser(userData)
+          // If verifikasi_kyc exists and has data, use it. Otherwise, use empty values
+          if (userData.verifikasi_kyc && userData.verifikasi_kyc.length > 0) {
+            const kycData = userData.verifikasi_kyc[0];
+            setFormData({
+              nik: kycData.nik || "",
+              name: kycData.name || "",
+              address: kycData.address || "",
+              phone: kycData.phone || "",
+              ktpFile: kycData.ktpFile || "",
+              selfieFile: kycData.selfieFile || "",
+              submittedAt: kycData.submittedAt || "",
+              status: kycData.status || ""
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
+    }
+
+    if (userEmail) {
+      fetchUserData()
+    }
+  }, [userEmail])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,7 +78,12 @@ export default function KYC() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'ktpFile' | 'selfieFile') => {
     if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, [field]: e.target.files![0] }));
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, [field]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -49,6 +105,42 @@ export default function KYC() {
         ktpFile: null,
         selfieFile: null,
       });
+
+      // Get member ID from local storage or other authentication context
+      // const memberId = localStorage.getItem('userEmail') || '';
+      // console.log(memberId)
+
+      // Update the member's verifikasi_kyc array with the new KYC data
+      const response = await fetch(`api/members/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          verifikasi_kyc: [{
+            ...formData,
+            submittedAt: new Date().toISOString(),
+            status: 'pending',
+          }]
+        }),
+      });
+      
+      // Update the user data in db.json via JSON Server API
+      // const response = await fetch(`api/members/${memberId.id}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     verifikasi_kyc: [{
+      //       ...formData,
+      //       submittedAt: new Date().toISOString(),
+      //       status: 'pending',
+      //     }]
+      //   })
+      // });
+      
+      // if (!response.ok) {
+      //   throw new Error('Gagal menyimpan data KYC');
+      // }
       
       setIsSuccess(true);
     } catch (err) {
@@ -60,7 +152,7 @@ export default function KYC() {
 
   if (isSuccess) {
     return (
-      <div className="container mx-auto p-4 max-w-2xl">
+      <div className="container mx-auto p-4">
         <Card>
           <CardHeader className="text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-500 mb-4" />
@@ -79,8 +171,33 @@ export default function KYC() {
     );
   }
 
+  // Show pending verification status if exists
+  if (user?.verifikasi_kyc?.length > 0 && user.verifikasi_kyc[0].status === 'pending') {
+    return (
+      <div className="container mx-auto p-4">
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+              <Clock className="h-6 w-6 text-yellow-600" />
+            </div>
+            <CardTitle>Verifikasi Sedang Diproses</CardTitle>
+            <CardDescription>
+              Data verifikasi Anda sedang dalam proses pengecekan. 
+              Tim kami akan memverifikasi data Anda dalam 1x24 jam.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button asChild className="mt-4">
+              <a href="/dashboard">Kembali ke Dashboard</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
+    <div className="container mx-auto p-4">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Verifikasi Identitas</h1>
         <p className="text-muted-foreground">

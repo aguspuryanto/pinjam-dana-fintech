@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useLocalStorage } from '@/useLocalStorage'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,21 +15,46 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [userEmail, setUserEmail] = useLocalStorage('userEmail', '')
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     
-    // Dummy authentication
-    if (email === 'admin@example.com' && password === 'password') {
-      // Store authentication state
-      if (rememberMe) {
-        localStorage.setItem('isAuthenticated', 'true')
-      } else {
-        sessionStorage.setItem('isAuthenticated', 'true')
+    try {
+      const response = await fetch('/api/members')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-      navigate('/dashboard')
-    } else {
-      setError('Invalid email or password')
+      
+      const members = await response.json()
+      
+      // Find member with matching email and password
+      const authenticatedMember = members.find(
+        (member: { email: string; password: string }) => 
+          member.email === email && member.password === password
+      )
+      console.log(authenticatedMember)
+      
+      if (authenticatedMember) {
+        // Store authentication state and user email
+        setUserEmail(authenticatedMember.email)
+        
+        if (rememberMe) {
+          localStorage.setItem('isAuthenticated', 'true')
+        } else {
+          sessionStorage.setItem('isAuthenticated', 'true')
+          // Also set in sessionStorage for immediate access
+          sessionStorage.setItem('userEmail', authenticatedMember.email)
+        }
+        navigate('/dashboard')
+      } else {
+        setError('Invalid email or password')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('An error occurred while logging in. Please try again.')
     }
   }
 

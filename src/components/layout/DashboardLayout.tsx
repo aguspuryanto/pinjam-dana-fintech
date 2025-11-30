@@ -17,10 +17,34 @@ export default function DashboardLayout() {
     navigate('/login')
   }
 
+  // Ajukan Pinjaman
+  // Bayar Tagihan
+  // Kelola Rekening
+  // Verifikasi KYC
   const navItems = [
     {
       name: 'Dashboard',
       path: '/dashboard',
+      icon: <LayoutDashboard className="h-5 w-5" />,
+    },
+    {
+      name: 'Ajukan Pinjaman',
+      path: '/loan/apply',
+      icon: <LayoutDashboard className="h-5 w-5" />,
+    },
+    {
+      name: 'Bayar Tagihan',
+      path: '/payment',
+      icon: <LayoutDashboard className="h-5 w-5" />,
+    },
+    {
+      name: 'Kelola Rekening',
+      path: '/bank',
+      icon: <LayoutDashboard className="h-5 w-5" />,
+    },
+    {
+      name: 'Verifikasi KYC',
+      path: '/kyc',
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {

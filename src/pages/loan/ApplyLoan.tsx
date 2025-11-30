@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, DollarSign, Clock, FileText, Upload, Calendar, User, CreditCard } from "lucide-react";
+import { useLocalStorage } from "@/useLocalStorage";
+import { Member } from "@/types/member";
 
 export default function ApplyLoan() {
   const navigate = useNavigate();
@@ -17,14 +19,22 @@ export default function ApplyLoan() {
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
-    amount: 500000,
-    tenor: 3,
+    amount: 100000,
+    tenor: 1,
     purpose: "",
     salary: "",
     occupation: "",
     kkFile: null as File | null,
     salarySlipFile: null as File | null,
   });
+
+  // set min slider min:100000, max:500000
+  const [amtMin, setAmtMin] = useState(100000);
+  const [amtMax, setAmtMax] = useState(500000);
+  const [amtStep, setAmtStep] = useState(50000);
+
+  const [userEmail] = useLocalStorage('userEmail', '');
+  const [user, setUser] = useState<Member | null>(null)
 
   const loanPurposes = [
     "Modal Usaha",
@@ -42,6 +52,29 @@ export default function ApplyLoan() {
     { value: 6, label: "6 Bulan" },
     { value: 12, label: "12 Bulan" }
   ];
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/members')
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data')
+        }
+        const members = await response.json()
+        const foundUser = members.find((member: Member) => member.email === userEmail)
+        if (foundUser) {
+          console.log(foundUser.pinjaman_limit)
+          setAmtMax(foundUser.pinjaman_limit.maximum)
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
+    }
+
+    if (userEmail) {
+      fetchUserData()
+    }
+  }, [userEmail])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -80,7 +113,7 @@ export default function ApplyLoan() {
 
   if (isSuccess) {
     return (
-      <div className="container mx-auto p-4 max-w-2xl">
+      <div className="container mx-auto p-4">
         <Card>
           <CardHeader className="text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-500 mb-4" />
@@ -104,7 +137,7 @@ export default function ApplyLoan() {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
+    <div className="container mx-auto p-4">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Ajukan Pinjaman</h1>
         <p className="text-muted-foreground">
@@ -145,14 +178,14 @@ export default function ApplyLoan() {
                   </Label>
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>Rp 500.000</span>
-                      <span>Rp 10.000.000</span>
+                      <span>Rp {amtMin}</span>
+                      <span>Rp {amtMax}</span>
                     </div>
                     <Slider
                       id="amount"
-                      min={500000}
-                      max={10000000}
-                      step={50000}
+                      min={amtMin}
+                      max={amtMax}
+                      step={amtStep}
                       value={[formData.amount]}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, amount: value[0] }))}
                       className="py-4"

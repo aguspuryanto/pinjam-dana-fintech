@@ -84,7 +84,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Button variant="outline" className="h-24" asChild>
           <Link to="/loan/apply" className="flex flex-col items-center justify-center gap-2">
             <CreditCard className="h-6 w-6" />
@@ -109,7 +109,7 @@ export default function Dashboard() {
             <span>Verifikasi KYC</span>
           </Link>
         </Button>
-      </div>
+      </div> */}
 
       {/* Recent Activity */}
       <Card>

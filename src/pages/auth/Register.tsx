@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+// import { Toaster } from "@/components/ui/sonner"
+import { Loader2 } from "lucide-react";
+
+interface MemberData {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+}
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,6 +25,8 @@ export default function Register() {
     password: "",
     confirmPassword: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -20,14 +36,68 @@ export default function Register() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration logic here
+    
     if (formData.password !== formData.confirmPassword) {
-      alert("Password dan konfirmasi password tidak cocok!");
+      toast.error("Password dan konfirmasi password tidak cocok!");
       return;
     }
-    console.log("Registration data:", formData);
+
+    setIsLoading(true);
+    
+    try {
+      // Prepare the new member data (excluding confirmPassword)
+      const { confirmPassword, ...memberData } = formData;
+      const newMember: MemberData = {
+        ...memberData,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'active'
+      };
+
+      try {
+        // First, check if email exists
+        const checkResponse = await fetch('http://localhost:8000/members?email=' + encodeURIComponent(newMember.email));
+        if (!checkResponse.ok) {
+          throw new Error('Gagal memeriksa email');
+        }
+        
+        const existingMembers = await checkResponse.json();
+        
+        // Check if email already exists
+        if (existingMembers && existingMembers.length > 0) {
+          toast.error("Email sudah terdaftar!");
+          return;
+        }
+        
+        // If email doesn't exist, add new member
+        const saveResponse = await fetch('http://localhost:8000/members', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newMember),
+        });
+
+        if (!saveResponse.ok) {
+          throw new Error('Gagal menyimpan data');
+        }
+
+        toast.success("Pendaftaran berhasil! Silakan login.");
+        // navigate('/login');
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan');
+        return;
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error('Terjadi kesalahan saat mendaftar');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
