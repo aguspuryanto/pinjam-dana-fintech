@@ -3,22 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-// import { Toaster } from "@/components/ui/sonner"
 import { Loader2 } from "lucide-react";
-
-interface MemberData {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-}
+import { Member, MemberInput } from '@/types/member'
 
 export default function Register() {
-  const [formData, setFormData] = useState({
+  type RegisterFormData = Omit<MemberInput, 'verifikasi_kyc' | 'pinjaman_limit' | 'pinjaman_aktif' | 'pinjaman_riwayat' | 'salary' | 'occupation' | 'kkFile' | 'salarySlipFile'> & {
+    confirmPassword: string;
+  };
+
+  const [formData, setFormData] = useState<RegisterFormData>({
     name: "",
     email: "",
     phone: "",
@@ -49,17 +42,19 @@ export default function Register() {
     try {
       // Prepare the new member data (excluding confirmPassword)
       const { confirmPassword, ...memberData } = formData;
-      const newMember: MemberData = {
+      const newMember: Member = {
         ...memberData,
         id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        pinjaman_limit:{ "maximum": 500000 },
+        role: 'Member'
       };
 
       try {
         // First, check if email exists
-        const checkResponse = await fetch('http://localhost:8000/members?email=' + encodeURIComponent(newMember.email));
+        const checkResponse = await fetch('api/members?email=' + encodeURIComponent(newMember.email));
         if (!checkResponse.ok) {
           throw new Error('Gagal memeriksa email');
         }
@@ -73,7 +68,7 @@ export default function Register() {
         }
         
         // If email doesn't exist, add new member
-        const saveResponse = await fetch('http://localhost:8000/members', {
+        const saveResponse = await fetch('api/members', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -86,7 +81,7 @@ export default function Register() {
         }
 
         toast.success("Pendaftaran berhasil! Silakan login.");
-        // navigate('/login');
+        navigate('/login');
       } catch (error) {
         console.error('Error:', error);
         toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan');
