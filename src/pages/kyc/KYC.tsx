@@ -7,9 +7,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, Upload, Clock } from "lucide-react";
 import { useLocalStorage } from '@/useLocalStorage'
 import { Member } from '@/types/member'
+import { KYCFormData } from '@/types/kyc'
 
 export default function KYC() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<KYCFormData>({
     nik: "",
     name: "",
     address: "",
@@ -48,14 +49,10 @@ export default function KYC() {
           setUser(userData)
           // If verifikasi_kyc exists and has data, use it. Otherwise, use empty values
           if (userData.verifikasi_kyc && userData.verifikasi_kyc.length > 0) {
-            const kycData = userData.verifikasi_kyc[0];
+            // Type assertion to ensure we're using the correct type
+            const kycData = userData.verifikasi_kyc[0] as KYCFormData;
             setFormData({
-              nik: kycData.nik || "",
-              name: kycData.name || "",
-              address: kycData.address || "",
-              phone: kycData.phone || "",
-              ktpFile: kycData.ktpFile || "",
-              selfieFile: kycData.selfieFile || "",
+              ...kycData,
               submittedAt: kycData.submittedAt || "",
               status: kycData.status || ""
             });
@@ -96,19 +93,17 @@ export default function KYC() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Reset form
+      // Reset form with proper types
       setFormData({
         nik: "",
         name: "",
         address: "",
         phone: "",
-        ktpFile: null,
-        selfieFile: null,
+        ktpFile: "",
+        selfieFile: "",
+        submittedAt: "",
+        status: ""
       });
-
-      // Get member ID from local storage or other authentication context
-      // const memberId = localStorage.getItem('userEmail') || '';
-      // console.log(memberId)
 
       // Update the member's verifikasi_kyc array with the new KYC data
       const response = await fetch(`api/members/${user.id}`, {
@@ -125,22 +120,9 @@ export default function KYC() {
         }),
       });
       
-      // Update the user data in db.json via JSON Server API
-      // const response = await fetch(`api/members/${memberId.id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     verifikasi_kyc: [{
-      //       ...formData,
-      //       submittedAt: new Date().toISOString(),
-      //       status: 'pending',
-      //     }]
-      //   })
-      // });
-      
-      // if (!response.ok) {
-      //   throw new Error('Gagal menyimpan data KYC');
-      // }
+      if (!response.ok) {
+        throw new Error('Gagal menyimpan data KYC');
+      }
       
       setIsSuccess(true);
     } catch (err) {
